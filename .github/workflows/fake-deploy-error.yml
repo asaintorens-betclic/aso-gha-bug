@@ -27,21 +27,34 @@ jobs:
           fi
           echo "OK"
 
-  step-1b-init:
-    name: "Step 1b - Init (nested reusable)"
+  step-1a-approval:
+    name: "Step 1a - Approval"
+    runs-on: ubuntu-latest
     needs: [step-1]
     if: |
       !cancelled() &&
       needs.step-1.result == 'success'
+    environment: production
+    steps:
+      - run: echo "Approved"
+
+  step-1b-init:
+    name: "Step 1b - Init (nested reusable)"
+    needs: [step-1, step-1a-approval]
+    if: |
+      !cancelled() &&
+      needs.step-1.result == 'success' &&
+      needs.step-1a-approval.result == 'success'
     uses: ./.github/workflows/fake-initialize.yml
 
   step-2:
     name: "Step 2 - ${{ matrix.unit.name }}"
     runs-on: ubuntu-latest
-    needs: [step-1, step-1b-init]
+    needs: [step-1, step-1a-approval, step-1b-init]
     if: |
       !cancelled() &&
       needs.step-1.result == 'success' &&
+      (needs.step-1a-approval.result == 'success' || needs.step-1a-approval.result == 'skipped') &&
       (needs.step-1b-init.result == 'success' || needs.step-1b-init.result == 'skipped')
     strategy:
       fail-fast: false
