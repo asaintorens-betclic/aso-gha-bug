@@ -1,0 +1,11 @@
+name: "Fake Finalize"
+
+on:
+  workflow_call:
+
+jobs:
+  notify:
+    name: "Notify"
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🐛 BUG - this should not have run"

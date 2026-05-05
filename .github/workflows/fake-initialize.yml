@@ -1,0 +1,11 @@
+name: "Fake Initialize"
+
+on:
+  workflow_call:
+
+jobs:
+  init:
+    name: "Init"
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Initialized"
