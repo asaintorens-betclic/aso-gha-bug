@@ -81,15 +81,20 @@ jobs:
     name: "Step 3 - Validate (the bug surface)"
     runs-on: ubuntu-latest
     needs: [step-2, step-1b-init]
+    # BUG: same laxe condition as betclic-gha-workflows deploy.yml@v3 (commit 9da8ed4)
+    # accepts step-2 == 'skipped' → job runs even when matrix was skipped
     if: |
       !cancelled() &&
-      needs.step-2.result == 'success' &&
+      (needs.step-2.result == 'success' || needs.step-2.result == 'skipped') &&
       (needs.step-1b-init.result == 'success' || needs.step-1b-init.result == 'skipped')
     steps:
+      - name: Checkout (always runs - makes the job conclusion = success)
+        uses: actions/checkout@v4
       - name: Check deployment statuses
-        run: |
-          echo "🐛 IF THIS RUNS WHEN STEP-2 WAS SKIPPED, BUG IS REPRODUCED"
-          echo "Units from needs.step-2.outputs.units: ${{ needs.step-2.outputs.units }}"
+        if: needs.step-2.result == 'success'
+        run: echo "Real check (skipped when step-2 skipped)"
+      - name: BUG MARKER
+        run: echo "🐛 BUG REPRODUCED — this job ran despite step-2 being skipped, and will report SUCCESS"
 
   step-4-finalize:
     name: "Step 4 - Finalize (sends notif)"
